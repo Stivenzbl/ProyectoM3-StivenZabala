@@ -1,9 +1,9 @@
 ﻿/*
- * views/chat.js â€” Chat engine completo (Resolution)
+ * views/chat.js — Chat engine completo (Resolution)
  *
  * Pipeline:
- *   submit â†’ appendUserMessage â†’ getTrimmedHistory â†’ buildPayload
- *   â†’ callAI â†’ normalizeAIResponse â†’ appendAssistantMessage â†’ appendMessage
+ *   submit → appendUserMessage → getTrimmedHistory → buildPayload
+ *   → callAI → normalizeAIResponse → appendAssistantMessage → appendMessage
  *
  * Defensas: isLoading, lockUI, debounce, retry 429, easter eggs
  */
@@ -28,10 +28,10 @@ let currentCharacter = null;
 let isLoading = false;
 
 const EASTER_EGGS = {
-  ping: { text: "ðŸ“ Â¡pong!", meta: "ðŸ¥š Easter egg" },
-  pong: { text: "ðŸ“ Â¡ping!", meta: "ðŸ¥š Easter egg" },
-  "42": { text: "ðŸŒŒ La respuesta al sentido de la vida, el universo y todo lo demÃ¡s.", meta: "ðŸ¥š Easter egg" },
-  gracias: { text: "Â¡De nada! ðŸ˜Š RecordÃ¡: la ciencia nunca termina, solo encuentra nuevas preguntas.", meta: "" },
+  ping: { text: "🏓 ¡pong!", meta: "🥚 Easter egg" },
+  pong: { text: "🏓 ¡ping!", meta: "🥚 Easter egg" },
+  "42": { text: "🌌 La respuesta al sentido de la vida, el universo y todo lo demás.", meta: "🥚 Easter egg" },
+  gracias: { text: "¡De nada! 😊 Recordá: la ciencia nunca termina, solo encuentra nuevas preguntas.", meta: "" },
 };
 
 function checkEasterEgg(text) {
@@ -53,7 +53,7 @@ function debounce(fn, delay) {
 async function retryOnceAfter429(error, payload) {
   const seconds = error.retryAfterSeconds ?? 5;
   for (let i = seconds; i > 0; i -= 1) {
-    showStatus("retrying", `â³ Rate limit. Reintentando en ${i}s...`);
+    showStatus("retrying", `⏳ Rate limit. Reintentando en ${i}s...`);
     await wait(1000);
   }
   showTyping();
@@ -62,7 +62,7 @@ async function retryOnceAfter429(error, payload) {
   hideTyping();
   const { text: aiText, truncated } = normalizeAIResponse(raw);
   chatHistory = appendAssistantMessage(chatHistory, aiText);
-  appendMessage("assistant", aiText || "No recibÃ­ texto en la respuesta.", truncated ? "âš ï¸ truncada" : "");
+  appendMessage("assistant", aiText || "No recibí texto en la respuesta.", truncated ? "⚠️ truncada" : "");
   showStatus("hidden");
 }
 
@@ -98,7 +98,7 @@ async function sendMessage(text) {
     hideTyping();
     const { text: aiText } = normalizeAIResponse(raw);
     chatHistory = appendAssistantMessage(chatHistory, aiText);
-    appendMessage("assistant", aiText || "No recibÃ­ texto en la respuesta.");
+    appendMessage("assistant", aiText || "No recibí texto en la respuesta.");
     showStatus("hidden");
   } catch (err) {
     hideTyping();
@@ -108,12 +108,12 @@ async function sendMessage(text) {
         await retryOnceAfter429(err, payload);
       } catch (retryErr) {
         hideTyping();
-        showStatus("error", "âŒ Error al reintentar. IntentÃ¡ mÃ¡s tarde.");
+        showStatus("error", "❌ Error al reintentar. Intentá más tarde.");
         console.error("[retry failed]", retryErr);
       }
     } else {
       console.error("[sendMessage error]", err);
-      showStatus("error", "âŒ Error de conexiÃ³n. RevisÃ¡ la consola.");
+      showStatus("error", "❌ Error de conexión. Revisá la consola.");
     }
   } finally {
     isLoading = false;
@@ -132,21 +132,21 @@ export function renderChat(characterKey) {
   $app.innerHTML = `
     <div class="chat-app">
       <header class="chat-header">
-        <a href="/" class="chat-header__back">â† Volver</a>
+        <a href="/" class="chat-header__back">← Volver</a>
         <div class="chat-header__info">
           <span class="chat-header__avatar">${currentCharacter.avatar}</span>
           <h2 class="chat-header__name">${currentCharacter.name}</h2>
         </div>
         <div class="chat-header__actions">
-          <span class="counter-badge" id="counter-badge">ðŸ’¬ #0</span>
-          <button id="reset-btn" class="chat-header__reset" title="Nueva conversaciÃ³n">â†º</button>
+          <span class="counter-badge" id="counter-badge">💬 #0</span>
+          <button id="reset-btn" class="chat-header__reset" title="Nueva conversación">↺</button>
         </div>
       </header>
 
       <main class="chat-messages" id="messages" aria-live="polite" aria-label="Mensajes del chat">
         <div class="messages-empty" id="messages-empty">
           <div class="messages-empty__avatar">${currentCharacter.avatar}</div>
-          <p>ðŸ‘‹ Â¡Hola! Soy el <strong>${currentCharacter.name}</strong>.<br>Preguntame lo que quieras.</p>
+          <p>👋 ¡Hola! Soy el <strong>${currentCharacter.name}</strong>.<br>Preguntame lo que quieras.</p>
         </div>
       </main>
 
@@ -156,8 +156,8 @@ export function renderChat(characterKey) {
 
       <form class="composer" id="composer-form" autocomplete="off" novalidate>
         <input class="composer__input" id="composer-input" type="text"
-          placeholder="EscribÃ­ tu mensaje..." aria-label="Mensaje" maxlength="500">
-        <button class="composer__btn" id="send-btn" type="submit" aria-label="Enviar">â†‘</button>
+          placeholder="Escribí tu mensaje..." aria-label="Mensaje" maxlength="500">
+        <button class="composer__btn" id="send-btn" type="submit" aria-label="Enviar">↑</button>
       </form>
     </div>
   `;
