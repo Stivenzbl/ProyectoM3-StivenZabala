@@ -1,0 +1,10 @@
+Contexto y rol del estudiante
+Ir a la presentación completa del Proyecto Integrador
+
+Chatea con tu personaje favorito
+Contexto del proyecto y rol del estudiante: 
+Eres desarrollador/a frontend junior en ComicSansCon, una agencia digital especializada en experiencias interactivas para fans de videojuegos, películas y series de televisión.
+
+El equipo de producto quiere lanzar una prueba de concepto (POC) de una aplicación web donde los usuarios puedan chatear con personajes ficticios usando inteligencia artificial. Tu tarea es crear una Single Page Application responsive que permita a los usuarios tener conversaciones naturales con un personaje conocido de alguna franquicia popular de tu elección, integrando una API de AI de forma segura mediante Vercel Functions, implementando routing básico, y desplegando la aplicación funcional en Vercel para que el equipo de producto pueda mostrarla a stakeholders y decidir si quieren ampliar o no el proyecto.
+
+https://docs.google.com/presentation/d/1BKTkkvw47y8WYW4MCvSLoKc4w7TDbQHofkt7MtxK3VE/edit?pli=1&slide=id.g3bfdc7afb7d_1_9#slide=id.g3bfdc7afb7d_1_9

@@ -1,0 +1,48 @@
+Entregable Final
+Entregable
+📁 Desarrollo
+  📄 Código fuente (estructura clara).
+  📄 Serverless functions funcionando
+
+   📄 .env.example con las variables necesarias (sin valores reales)
+  📄 Al menos 4 tests unitarios con Vitest
+        📄 URL pública de la aplicación desplegada en Vercel
+
+ 📁 Documentación
+  📄 README con:
+-  Descripción del personaje elegido
+
+ -  Requisitos y pasos para ejecutar local (instalar dependencias, configurar .env, ejecutar con vercel dev)
+
+  - Cómo ejecutar tests
+
+ -  Cómo desplegar a Vercel
+
+  - Capturas de pantalla de la aplicación funcionando
+
+ -  Link a la aplicación desplegada
+  - Registro del uso de AI en el proyecto.
+
+📦 Entregable final: Enlace con el repositorio de GitHub
+
+Estructura sugerida del proyecto (simple):
+/api
+functions.js (Vercel Serverless Function)
+/src
+index.html
+styles.css
+app.js (lógica principal, routing)
+chat.js (lógica específica del chat)
+utils.js (funciones de transformación de datos)
+/tests
+utils.test.js
+app.test.js
+.env.example (ejemplo de variables sin valores reales)
+.gitignore
+README.md
+package.json
+Rúbrica de corrección
+En este archivo podrás ver las rúbricas de corrección para el Proyecto Integrador del Módulo.
+
+https://docs.google.com/spreadsheets/d/12bw-cgZ6TNJlcDAtLgHqFZEAL3OEHBlxALtX02ciNh0/edit?gid=0#gid=0
+

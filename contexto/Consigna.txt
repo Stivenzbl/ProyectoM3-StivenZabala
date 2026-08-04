@@ -1,0 +1,74 @@
+Consigna
+Detalle
+Crear una Single Page Application que permita a usuarios chatear con un personaje ficticio usando Google Gemini AI. La aplicación debe tener una interfaz responsive que sea mobile-first, es decir, debe verse en celular; Implementar routing básico (Home, Chat, About), y conectarse a Gemini AI de forma segura mediante Vercel Functions para no exponer la API key. La aplicación se desplegará en Vercel con tests unitarios implementados.
+
+Buenas prácticas y recomendaciones
+Elegir un personaje que sea interesante y que tenga personalidad distintiva (puede ser de películas, series, libros, videojuegos, etc.)
+El system/context prompt es crucial: define cómo habla el personaje, qué sabe, qué limitaciones tiene, y que debe dar respuestas cortas apropiadas para chat
+Probar el chat extensivamente: la AI debe mantener contexto de la conversación, responder en el tono del personaje, y manejar diferentes tipos de preguntas
+No exponer nunca la API key en el código del cliente
+Testear la aplicación en diferentes tamaños usando DevTools del navegador
+El historial de conversación se mantiene solo durante la sesión (mientras no se recargue la aplicación)
+Usar console.log para debuggear pero eliminarlos o comentarlos antes de desplegar
+Verificar que el deployment en Vercel funciona correctamente incluyendo las serverless functions
+Alcance funcional mínimo
+Vistas/Rutas:
+
+/home: Página de bienvenida con descripción del personaje y botón para empezar a chatear
+/chat: Interfaz de chat donde se desarrolla la conversación
+/about: Información sobre el proyecto y el personaje elegido
+Funcionalidad del Chat:
+
+Diferenciación visual clara entre mensajes del usuario y mensajes del personaje
+Input para escribir mensajes con botón de enviar
+Estado de "escribiendo..." mientras el AI genera respuesta
+Manejo de errores si la petición a la api de AI falla
+Historial de conversación mantenido durante la sesión (mientras no se recargue la aplicación)
+Scroll automático al último mensaje al recibir respuestas
+Integración con AI:
+
+System/Context prompt bien diseñado que define la personalidad del personaje
+Respuestas del AI parseadas y mostradas correctamente
+Manejo apropiado de errores de la API
+Routing (SPA):
+
+Navegación entre vistas sin recargar la página
+URLs que reflejan la vista actual (/home,  /chat, /about)
+Funcionalidad correcta de botones back/forward del navegador
+Links de navegación que usan History API
+Responsive Design:
+
+Diseño mobile-first para celulares que se adapta a tablets y desktop
+Media queries apropiadas para los breakpoints escogidos
+Interfaz usable en móviles, tablets y desktop (escoger 3 tamaños)
+😎Extra credit
+Persistencia del historial con localStorage:
+  Guardar el historial de conversación en localStorage
+
+  Cargar conversaciones anteriores cuando se recarga la aplicación
+
+  Agregar botón para "borrar historial" que limpie localStorage
+
+  Mostrar indicador visual de cuándo hay historial guardado
+
+Selección de múltiples personajes:
+  Crear una vista de "galería de personajes" con al menos 3 personajes diferentes
+
+  Permitir al usuario elegir con qué personaje quiere chatear
+
+  Cada personaje debe tener su propio system/context prompt único
+
+  Diseñar tarjetas visuales atractivas para cada personaje
+
+Funcionalidades adicionales:
+  Agregar timestamps a los mensajes
+
+  Implementar indicador de "escribiendo..." animado mientras la AI responde
+
+  Permitir al usuario presionar Enter para enviar (además del botón)
+
+  Agregar botón para copiar respuestas del AI al portapapeles
+
+  Modo oscuro/claro con toggle
+
+Implementa una, dos, o las tres opciones según tu interés y disponibilidad. Puedes escoger la que más te llame la atención.

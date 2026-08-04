@@ -1,0 +1,10 @@
+Objetivos del Proyecto Integrador
+🎯Objetivos
+Diseñar interfaces responsive usando mobile-first, Flexbox/Grid y media queries. Crear la interfaz del chat con diferenciación visual entre mensajes y estados apropiados.
+Implementar SPA usando History API para navegación sin recargas. Estructurar la aplicación con vistas (Home, Chat, About) que se renderizan dinámicamente según la ruta.
+Dominar Promises y async/await para operaciones asíncronas. Utilizar Fetch API manejando errores y mostrando estados de carga con estilos CSS.
+Navegar estructuras JSON y transformar datos de APIs. Separar responsabilidades en funciones de fetching, transformación/parseo y renderizado.
+Aplicar técnicas de prompting efectivo proporcionando contexto relevante. Utilizar AI como herramienta de aprendizaje desarrollando criterio para evaluar sugerencias.
+Conectar con APIs de AI comprendiendo estructura de peticiones (roles, mensajes) y diseñando system prompts efectivos. Entender conceptos como tokens, temperature y rate limiting.
+Comprender por qué no exponer API keys en frontend. Implementar Vercel Serverless Functions como proxy seguro usando variables de entorno local y en producción.
+Escribir unit tests con Vitest y mockear fetch para tests sin red. Desplegar en Vercel conectando GitHub, configurando variables de entorno y verificando funcionamiento completo en producción.

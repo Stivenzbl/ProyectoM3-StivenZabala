@@ -1,0 +1,184 @@
+Guía para el desarrollo del PI
+Ir a la guía de acompañamiento para el desarrollo del PI
+https://docs.google.com/document/d/1R_HmixvMBA1ymxJM-kLNeaC-wCigQvlKWAmiPeGBtpw/edit?tab=t.0
+
+GUÍA PARA EL DESARROLLO DEL PROYECTO INTEGRADOR 3
+
+Propósito de esta guía
+
+Esta guía tiene como objetivo acompañarte en el desarrollo técnico del Proyecto Integrador 3.
+
+No reemplaza la consigna oficial ni define una única forma de resolver el proyecto. Su función es orientarte con recomendaciones y buenas prácticas para que puedas organizar tu desarrollo y evitar errores comunes.
+
+El foco está en ayudarte a construir una Single Page Application (SPA) funcional que permita conversar con un personaje ficticio utilizando inteligencia artificial, integrando la API de Gemini de forma segura y desplegando la aplicación en producción.
+
+Qué se espera del proyecto
+
+Se espera que desarrolles una Single Page Application responsive que permita a los usuarios chatear con un personaje ficticio utilizando inteligencia artificial.
+
+La aplicación debe:
+
+Implementar routing SPA usando History API.
+Tener tres vistas principales: Home, Chat y About.
+Integrar Google Gemini AI mediante una Vercel Serverless Function.
+Mantener el historial de conversación durante la sesión.
+Incluir al menos 4 tests unitarios con Vitest.
+Estar desplegada en Vercel con una URL pública funcional.
+Más allá de las funcionalidades, se valorará especialmente:
+Que la navegación SPA funcione correctamente, incluyendo los botones back/forward del navegador.
+Que la API key nunca esté expuesta en el frontend.
+Que el system prompt defina bien la personalidad del personaje.
+Que el código esté organizado y sea fácil de entender.
+Que la documentación permita ejecutar el proyecto sin ayuda externa.
+Cómo encarar el desarrollo
+
+Antes de escribir código
+
+Antes de comenzar a programar:
+
+Lee la consigna completa del proyecto.
+Elige el personaje con el que vas a trabajar.
+Define qué personalidad tendrá el personaje.
+Diseña una estructura simple de archivos para tu proyecto.
+Configura tu repositorio y el entorno de desarrollo.
+Estructura inicial sugerida:
+
+project-root/
+
+│
+
+├── api/
+
+│   └── functions.js
+
+│
+
+├── src/
+
+│   ├── index.html
+
+│   ├── styles.css
+
+│   ├── app.js
+
+│   ├── chat.js
+
+│   └── utils.js
+
+│
+
+├── tests/
+
+│   ├── utils.test.js
+
+│   └── app.test.js
+
+│
+
+├── .env
+
+├── .env.example
+
+├── .gitignore
+
+├── package.json
+
+└── README.md
+
+Orden recomendado de desarrollo
+Se recomienda avanzar en este orden para evitar bloqueos durante el desarrollo.
+
+1. Construir la interfaz básica
+
+Primero crea la estructura HTML del chat. Una estructura simple puede incluir un header, un área principal para los mensajes, un área para el input y un footer.
+
+Luego implementa estilos CSS mobile-first. Asegúrate de que los mensajes del usuario y del personaje se diferencien visualmente, y que el chat sea usable en pantallas pequeñas.
+
+2. Agregar media queries
+Una vez que el diseño mobile funcione, debes extenderlo para tablet y desktop. Elige un breakpoint para cada uno y ajusta el layout con Flexbox o Grid.
+
+3. Implementar el routing SPA
+Implementa la navegación entre /home, /chat y /about usando History API para cambiar la URL sin recargar la página.
+
+Asegúrate de manejar el evento popstate. Esto es lo que permite que los botones back y forward del navegador funcionen correctamente.
+
+4. Implementar el chat con datos en memoria
+Antes de conectar la inteligencia artificial, implementa el chat usando un array de mensajes en memoria. Esto te va a permitir probar la interfaz, verificar el scroll automático y validar la lógica de renderizado sin depender aún de la AI.
+
+5. Crear la Serverless Function
+Para evitar exponer la API key, la comunicación con Gemini debe hacerse desde el backend. Crea la función en /api/functions.js, que actuará como proxy entre el frontend y Gemini.
+
+El flujo es: el frontend le manda los mensajes a la función, la función llama a Gemini con la API key desde el servidor, y devuelve la respuesta al frontend.
+
+6. Diseñar el system prompt
+El system prompt define cómo habla el personaje. Un buen prompt debe establecer la personalidad, el tono, el conocimiento del personaje y su estilo de respuesta. También es importante indicar que las respuestas deben ser cortas y apropiadas para una conversación de chat.
+
+Prueba el prompt directamente en Google AI Studio antes de integrarlo al código. Así puedes iterarlo rápido sin tocar la aplicación.
+
+7. Conectar el frontend con la función serverless
+Una vez que la serverless function esté lista, conecta el frontend usando fetch para enviar los mensajes y recibir las respuestas. Implementa los estados visuales de carga y error para que el usuario sepa qué está pasando en cada momento.
+
+8. Mantener el historial de conversación
+En cada llamada a la AI debes enviar todo el historial de mensajes. La AI no recuerda conversaciones anteriores por sí sola: el contexto se lo tienes que dar en cada request. Sin esto, el personaje responderá sin tener en cuenta lo que se habló antes.
+
+9. Escribir tests unitarios
+Debes incluir al menos 4 tests con Vitest. Enfócate en funciones de transformación de datos, parseo de respuestas de la API y otras funciones utilitarias. Son las más fáciles de testear y las más importantes para garantizar que la lógica central funciona bien.
+
+10. Configurar variables de entorno y desplegar
+Crea un archivo .env para tu API key. Este archivo no debe subirse al repositorio: incluye en su lugar un .env.example con los nombres de las variables pero sin valores.
+
+Para desplegar, conecta el repositorio con Vercel, configura las variables de entorno en el dashboard y verifica que las serverless functions funcionen correctamente en producción.
+
+Buenas prácticas recomendadas
+
+Arquitectura
+Separar la lógica de chat del routing.
+Mantener funciones pequeñas y reutilizables.
+Organizar el código en módulos.
+Frontend
+Usar diseño mobile-first.
+Utilizar Flexbox o Grid para el layout.
+Mantener estilos simples y consistentes.
+Manejo de API
+Usar async/await.
+Manejar errores de red.
+Mostrar estados de carga.
+Git
+Realizar commits pequeños y descriptivos.
+No subir el archivo .env.
+Mantener el repositorio público.
+Notas y recomendaciones
+
+Elige un personaje que sea interesante y que tenga personalidad distintiva (puede ser de películas, series, libros, videojuegos, etc.).
+El system/context prompt es crucial: define cómo habla el personaje, qué sabe, qué limitaciones tiene, y que debe dar respuestas cortas apropiadas para chat.
+Prueba el chat extensivamente: la AI debe mantener contexto de la conversación, responder en el tono del personaje, y manejar diferentes tipos de preguntas.
+No expongas nunca la API key en el código del cliente.
+Testea la aplicación en diferentes tamaños usando DevTools del navegador.
+El historial de conversación se mantiene solo durante la sesión (mientras no se recargue la aplicación).
+Usa console.log para debuggear, pero elimina esos logs o coméntalos antes de desplegar.
+Verifica que el deployment en Vercel funciona correctamente incluyendo las serverless functions.
+Errores comunes a evitar
+
+Conectar la AI antes de probar el chat con datos en memoria.
+No manejar el evento popstate: el back/forward del navegador deja de funcionar.
+No enviar el historial completo en cada llamada a Gemini: el personaje pierde contexto entre mensajes.
+Exponer la API key directamente en el código del frontend.
+No manejar errores de la API.
+No documentar cómo ejecutar el proyecto localmente.
+Sobre el uso de IA
+
+Puedes utilizar herramientas de IA como apoyo durante el desarrollo. Debes documentar:
+
+Qué prompts utilizaste.
+Cómo influyeron en tu implementación.
+Qué decisiones tomaste a partir de las respuestas generadas.
+Cierre
+
+Esta guía está pensada para ayudarte a organizar tu desarrollo y tomar buenas decisiones técnicas.
+
+El objetivo final es que puedas demostrar que:
+
+Sabes construir una Single Page Application.
+Puedes integrar una API de inteligencia artificial de forma segura.
+Entiendes cómo estructurar un proyecto frontend de manera profesional.
+Eres capaz de entregar una aplicación funcional, documentada y desplegada.
