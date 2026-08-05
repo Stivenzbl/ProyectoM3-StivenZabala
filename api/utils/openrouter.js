@@ -49,7 +49,8 @@ export async function callOpenRouter({ apiKey, model, system, messages, temperat
       model: targetModel,
       messages: formattedMessages,
       temperature: temperature ?? 0.7,
-      max_tokens: maxTokens ?? 150,
+      max_tokens: maxTokens ?? 500,
+      include_reasoning: false,
     }),
   });
 

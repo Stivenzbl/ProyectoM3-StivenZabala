@@ -108,7 +108,7 @@ export function buildPayload(character, messages) {
     model: "gemini-2.0-flash",
     system: createSystemPrompt(character),
     messages,
-    max_tokens: 150,
+    max_tokens: 500,
     temperature: character.temperature,
   };
 }
