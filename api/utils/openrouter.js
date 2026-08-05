@@ -1,8 +1,8 @@
 /*
  * openrouter.js — Adaptador e integrador de OpenRouter API (OpenAI Compatible)
  *
- * Permite conectarse a cientos de modelos (Gemini, Llama, DeepSeek, Mistral)
- * usando el formato estandar de Chat Completions.
+ * Permite conectarse a cientos de modelos (Gemini, Llama, DeepSeek, Mistral, Gemma)
+ * usando el formato estándar de Chat Completions.
  */
 
 export function toOpenRouterMessages(systemPrompt, messages) {
@@ -32,9 +32,10 @@ export function isOpenRouterKey(key) {
 
 export async function callOpenRouter({ apiKey, model, system, messages, temperature, maxTokens }) {
   const formattedMessages = toOpenRouterMessages(system, messages);
+  // Usa por defecto 'openrouter/free', el router automático oficial de modelos gratuitos de OpenRouter
   const targetModel =
     process.env.OPENROUTER_MODEL ||
-    (model && model.includes("/") ? model : "google/gemini-2.0-flash-lite-preview-02-05:free");
+    (model && model.includes("/") ? model : "openrouter/free");
 
   const response = await fetch("https://openrouter.ai/api/v1/chat/completions", {
     method: "POST",
