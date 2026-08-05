@@ -1,34 +1,77 @@
-# Implementación de Inteligencia Artificial
+# Implementación de Inteligencia Artificial (Google Gemini AI Engine)
 
-Este documento detalla la arquitectura técnica y el flujo de datos para la implementación del motor de IA en el proyecto.
+Este documento detalla la arquitectura técnica, la ingeniería de prompts y el flujo de datos para la integración segura del motor de IA en el Proyecto Integrador PIM3.
 
-## Arquitectura de Conexión
-El sistema utiliza una estructura de tres capas diseñada para separar la lógica de presentación, la gestión del estado de la conversación y la comunicación con proveedores externos.
+---
 
-### 1. Capa de UI/Cliente (Frontend)
-- **Archivo:** `src/view/chat.js` y `src/engine/aiClient.js`.
-- El cliente no se comunica directamente con la API externa para proteger las credenciales. En su lugar, envía el payload del usuario a un endpoint interno `/api/chat`.
+## 🔒 Arquitectura de Conexión y Seguridad
 
-### 2. Capa de Pasarela (Backend/Middleware)
-- **Archivo:** `api/chat.js` y `api/utils/`.
-- Funciona como una función "Serverless". Recibe la petición del frontend, añade las cabeceras necesarias y actúa como el único punto donde se utiliza la clave de API real (`GEMINI_API_KEY`).
+El sistema utiliza una arquitectura desvinculada de tres capas para garantizar que **la API Key de Google Gemini nunca se exponga en el navegador cliente**.
+
+```
+[ Frontend SPA ] ---> (POST /api/chat) ---> [ Vercel Serverless Function ] ---> [ Google Gemini API ]
+ (Historial recortado)                         (Inyecta GEMINI_API_KEY)            (gemini-1.5-flash)
+```
+
+### 1. Capa de Presentación y Estado (Frontend)
+- **Archivos:** `src/views/chat.js`, `src/engine/history.js`, `src/engine/payload.js`, `src/engine/storage.js`.
+- **Gestión de Context Window:** La IA no conserva memoria entre solicitudes HTTP. Por ello, `history.js` mantiene un historial recortado con `getTrimmedHistory(messages, 10)` enviando solo las últimas interacciones para controlar tokens, costos y rate limits.
+- **Persistencia en LocalStorage:** `storage.js` guarda y restaura automáticamente las conversaciones por personaje (`pim3_chat_history_<key>`).
+
+### 2. Capa de Pasarela y Proxy (Backend / Serverless)
+- **Archivos:** `api/chat.js` y `api/utils/`.
+- La Serverless Function de Vercel actúa como el único punto seguro donde se lee `process.env.GEMINI_API_KEY`.
+- Recibe el payload estandarizado del cliente, valida los tipos de datos en `request.js` y maneja excepciones HTTP como `429 Too Many Requests`.
 
 ### 3. Capa de Adaptación (Gemini Adapter)
 - **Archivo:** `api/utils/gemini.js`.
-- Implementa una función crítica: `toGeminiContents(messages)`.
-- **Mapeo de Roles:** Convierte el esquema interno a los requerimientos de Google:
-  - `assistant` $\rightarrow$ `model`
+- Función principal: `toGeminiContents(messages)`.
+- **Mapeo de Roles:**
   - `user` $\rightarrow$ `user`
-- **Preservación de Contexto:** Transforma todo el array de mensajes históricos en un formato de "partes" requerido por Gemini, asegurando que el modelo mantenga la coherencia del chat.
+  - `assistant` $\rightarrow$ `model`
+- **Generación de Contenido:** Transforma las conversaciones en la estructura de `parts: [{ text }]` requerida por el SDK `@google/generative-ai`.
 
-## Flujo de Datos (Data Flow)
-1. El usuario envía un mensaje en la interfaz.
-2. `aiClient.js` captura el evento del formulario y construye el objeto JSON.
-3. La petición viaja a `/api/chat`.
-4. En el servidor, se procesa con `gemini.js` para reformatear los datos antes de enviarlos a Google.
-5. El resultado vuelve al cliente como un objeto refinado, que es renderizado mediante el motor de UI.
+---
 
-## Tecnologías Clave
-- **Modelo:** Google Gemini.
-- **Protobuf/JSON Parsing:** Manejado por las clases en `api/utils`.
-- **Request Management:** Implementado en `request.js` para manejo de errores y tiempos de espera de red.
+## 🎭 Ingeniería de Prompts (System Prompts)
+
+Cada personaje posee un `systemInstruction` único configurado en `src/engine/payload.js` para moldear su personalidad y restringir la longitud de las respuestas:
+
+### 🧪 Dr. Science
+```text
+Actúa como el Dr. Science, un científico apasionado y didáctico.
+Explica conceptos científicos de forma clara y entusiasta.
+Responde en máximo 3 líneas. Usa analogías simples.
+Si no sabes la respuesta, admítelo y propone un experimento mental.
+```
+
+### 👨‍🍳 Chef Claude
+```text
+Actúa como el Chef Claude, un chef creativo y entusiasta.
+Hablas de comida, recetas y técnicas culinarias con pasión.
+Responde en máximo 3 líneas. Usa metáforas culinarias cuando sea posible.
+Si no sabes algo de cocina, sugerí experimentar con ingredientes.
+```
+
+### 🕵️ Detective
+```text
+Actúa como un detective perspicaz y metódico.
+Analizas situaciones con lógica y deducción. Respondes de forma directa.
+Máximo 3 líneas. Nunca especulas sin evidencia.
+Si algo es incierto, lo señalas claramente y pedís más datos.
+```
+
+### 🚀 Astro Explorer
+```text
+Actúa como Astro Explorer, un intrépido astronauta y divulgador astronómico.
+Hablas sobre estrellas, galaxias y la inmensidad del espacio con fascinación y asombro.
+Responde en máximo 3 líneas. Usa referencias espaciales.
+Si algo es un misterio del cosmos, propone contemplar las estrellas.
+```
+
+---
+
+## 🔄 Manejo de Errores y Rate Limiting
+
+1. **429 Rate Limit Handling:** Si Gemini retorna `429`, la Serverless Function devuelve una respuesta estructurada con `retryAfterSeconds`. El cliente realiza un reintento automático dinámico (`retryOnceAfter429`) mostrando la cuenta regresiva en la UI.
+2. **Normalización de Respuestas:** `normalizer.js` analiza la respuesta de la API y extrae de forma segura el bloque de texto `content[].text`, detectando también si la respuesta fue truncada por la bandera `stop_reason === "max_tokens"`.
