@@ -1,14 +1,12 @@
 /*
  * api/chat.js — Vercel Serverless Function del proyecto integrador PIM3
  *
- * Responsabilidad:
- * - Recibir el payload construido por el engine del frontend.
- * - Leer GEMINI_API_KEY desde process.env.
- * - Adaptar el payload interno del chat a Gemini.
- * - Fallback inteligente solo para errores 404 de modelo no encontrado.
- * - Retorno inmediato de 429 Rate Limit.
+ * Arquitectura Híbrida:
+ * 1. OpenRouter API Gateway (OpenAI Compatible) si se detecta OPENROUTER_API_KEY o clave sk-or-*.
+ * 2. Google Generative AI SDK si se detecta GEMINI_API_KEY de Google AI Studio (AIzaSy*).
+ * 3. Fallback inteligente entre proveedores y modelos.
  *
- * La API key nunca se envía al navegador.
+ * La API key nunca se envía al cliente.
  */
 
 import { GoogleGenerativeAI } from "@google/generative-ai";
@@ -16,6 +14,7 @@ import { isRateLimitError, isInvalidApiKeyError, getHttpStatus } from "./utils/e
 import { toGeminiContents } from "./utils/gemini.js";
 import { parseJsonBody, getMessages, getGenerationSettings } from "./utils/request.js";
 import { createChatResponse } from "./utils/response.js";
+import { callOpenRouter, isOpenRouterKey } from "./utils/openrouter.js";
 
 export default async function handler(req, res) {
   if (req.method !== "POST") {
@@ -24,19 +23,42 @@ export default async function handler(req, res) {
 
   try {
     const payload = parseJsonBody(req.body);
-    const apiKey = process.env.GEMINI_API_KEY;
+    const openRouterKey = process.env.OPENROUTER_API_KEY;
+    const geminiKey = process.env.GEMINI_API_KEY;
+    const activeKey = openRouterKey || geminiKey;
 
-    if (!apiKey) {
-      return res.status(500).json({ error: "GEMINI_API_KEY no configurada en las variables de entorno" });
+    if (!activeKey) {
+      return res.status(500).json({
+        error: "No se encontró OPENROUTER_API_KEY ni GEMINI_API_KEY en las variables de entorno.",
+      });
     }
 
     const messages = getMessages(payload);
     const { system, modelName, temperature, maxOutputTokens } = getGenerationSettings(payload);
 
-    const genAI = new GoogleGenerativeAI(apiKey);
+    // -------------------------------------------------------------
+    // RUTA 1: OpenRouter API Gateway (si hay OPENROUTER_API_KEY o la clave es sk-or-*)
+    // -------------------------------------------------------------
+    if (openRouterKey || isOpenRouterKey(geminiKey)) {
+      const apiKeyToUse = openRouterKey || geminiKey;
+      const openRouterResponse = await callOpenRouter({
+        apiKey: apiKeyToUse,
+        model: payload.model,
+        system,
+        messages,
+        temperature,
+        maxTokens: maxOutputTokens,
+      });
+
+      return res.status(200).json(openRouterResponse);
+    }
+
+    // -------------------------------------------------------------
+    // RUTA 2: Google Generative AI Native SDK
+    // -------------------------------------------------------------
+    const genAI = new GoogleGenerativeAI(geminiKey);
     const contents = toGeminiContents(messages);
 
-    // Modelos oficiales de Google Generative AI
     const candidateModels = Array.from(
       new Set([
         process.env.GEMINI_MODEL,
@@ -68,17 +90,15 @@ export default async function handler(req, res) {
 
         text = result.response.text().trim();
         lastError = null;
-        break; // Éxito
+        break; // Petición exitosa
       } catch (err) {
         lastError = err;
 
-        // Si es 429 Rate Limit o API Key no válida, cortar inmediatamente la iteración
         if (isRateLimitError(err) || isInvalidApiKeyError(err)) {
           break;
         }
 
         const errText = String(err?.message || "");
-        // Si el modelo específico no existe (404), intentar con el siguiente modelo de la lista
         if (errText.includes("404") || errText.toLowerCase().includes("not found")) {
           console.warn(`[GEMINI FALLBACK] Modelo '${modelToTry}' no disponible (404). Intentando siguiente...`);
           continue;
@@ -98,14 +118,14 @@ export default async function handler(req, res) {
 
     if (isRateLimitError(error)) {
       return res.status(429).json({
-        error: "Límite de peticiones por minuto alcanzado (Google Gemini Free Tier). Espera 15 segundos.",
+        error: "Límite de peticiones por minuto alcanzado. Espera 15 segundos antes de reintentar.",
         retryAfterSeconds: 15,
       });
     }
 
     if (isInvalidApiKeyError(error)) {
       return res.status(400).json({
-        error: "🔑 Clave de API de Gemini no válida o expirada. Por favor configura una API Key válida de Google AI Studio (formato AIzaSy...) en GEMINI_API_KEY.",
+        error: "🔑 Clave de API no válida o expirada. Verifica tu API Key de OpenRouter (sk-or-...) o de Google AI Studio (AIzaSy...).",
       });
     }
 
