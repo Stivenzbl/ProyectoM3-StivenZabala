@@ -50,21 +50,34 @@ function wait(ms) {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
-async function retryOnceAfter429(error, payload) {
-  const seconds = error.retryAfterSeconds ?? 5;
-  for (let i = seconds; i > 0; i -= 1) {
-    showStatus("retrying", `⏳ Rate limit. Reintentando en ${i}s...`);
-    await wait(1000);
+async function retryWithBackoff(initialErr, payload, maxAttempts = 2) {
+  let attempt = 0;
+  while (attempt < maxAttempts) {
+    attempt++;
+    const waitSecs = initialErr.retryAfterSeconds ? initialErr.retryAfterSeconds + attempt * 3 : 10;
+    for (let i = waitSecs; i > 0; i -= 1) {
+      showStatus("retrying", `⏳ Límite de cuota Gemini (15 req/min). Reintentando (${attempt}/${maxAttempts}) en ${i}s...`);
+      await wait(1000);
+    }
+    showTyping();
+    showStatus("loading", `Reintentando (${attempt}/${maxAttempts})...`);
+    try {
+      const raw = await callAI(payload);
+      hideTyping();
+      const { text: aiText, truncated } = normalizeAIResponse(raw);
+      const finalResponse = aiText || "No recibí texto en la respuesta.";
+      chatHistory = appendAssistantMessage(chatHistory, finalResponse);
+      saveHistory(activeCharacterKey, chatHistory);
+      appendMessage("assistant", finalResponse, truncated ? "⚠️ truncada" : "");
+      showStatus("hidden");
+      return;
+    } catch (err) {
+      hideTyping();
+      if (err.status !== 429 || attempt >= maxAttempts) {
+        throw err;
+      }
+    }
   }
-  showTyping();
-  showStatus("loading", "Reintentando...");
-  const raw = await callAI(payload);
-  hideTyping();
-  const { text: aiText, truncated } = normalizeAIResponse(raw);
-  chatHistory = appendAssistantMessage(chatHistory, aiText);
-  saveHistory(activeCharacterKey, chatHistory);
-  appendMessage("assistant", aiText || "No recibí texto en la respuesta.", truncated ? "⚠️ truncada" : "");
-  showStatus("hidden");
 }
 
 async function sendMessage(text) {
@@ -111,11 +124,11 @@ async function sendMessage(text) {
     if (err.status === 429) {
       console.warn("[sendMessage 429]", err);
       try {
-        await retryOnceAfter429(err, payload);
+        await retryWithBackoff(err, payload, 2);
       } catch (retryErr) {
         hideTyping();
-        showStatus("error", "❌ Rate limit excedido. Intenta de nuevo en unos momentos.");
-        console.error("[retry failed]", retryErr);
+        showStatus("error", "⏳ Límite de tasa gratuito de Google Gemini (15 peticiones/min) alcanzado. Espera 10 segundos antes de enviar otro mensaje.");
+        console.warn("[retryWithBackoff ended]", retryErr);
       }
     } else {
       console.error("[sendMessage error]", err);
