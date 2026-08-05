@@ -100,7 +100,7 @@ export function createSystemPrompt(character) {
  */
 export function buildPayload(character, messages) {
   return {
-    model: "gemini-1.5-flash",
+    model: "gemini-2.0-flash",
     system: createSystemPrompt(character),
     messages,
     max_tokens: 150,

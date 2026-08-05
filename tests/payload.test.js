@@ -9,7 +9,7 @@ describe("payload.js", () => {
     const messages = [{ role: "user", content: "hola" }];
     const payload = buildPayload(character, messages);
 
-    expect(payload.model).toBe("gemini-1.5-flash");
+    expect(payload.model).toBe("gemini-2.0-flash");
     expect(payload.system).toContain("Dr. Science");
     expect(payload.messages).toBe(messages);
     expect(isValidPayload(payload)).toBe(true);
