@@ -1,10 +1,11 @@
-# 🤖 PIM3 — Chat AI Serverless con Google Gemini
+# 🤖 PIM3 — Chat AI Serverless con OpenRouter API
 
-[![Vitest Tests](https://img.shields.io/badge/Tests-17%20passed-brightgreen?style=flat-square&logo=vitest)](https://vitest.dev)
+[![Vitest Tests](https://img.shields.io/badge/Tests-22%20passed-brightgreen?style=flat-square&logo=vitest)](https://vitest.dev)
+[![OpenRouter](https://img.shields.io/badge/OpenRouter-API%20Gateway-6366f1?style=flat-square)](https://openrouter.ai)
 [![Vercel Deployment](https://img.shields.io/badge/Vercel-Deployed-000000?style=flat-square&logo=vercel)](https://vercel.com)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg?style=flat-square)](LICENSE)
 
-Una Single Page Application (SPA) full-stack y altamente escalable construida con JavaScript moderno (ES Modules), CSS3 dinámico y funciones Serverless de Vercel para interactuar con la API de Google Gemini de forma totalmente segura.
+Una Single Page Application (SPA) full-stack y altamente escalable construida con JavaScript moderno (ES Modules), CSS3 dinámico y funciones Serverless de Vercel integradas con **OpenRouter API Gateway** (estándar OpenAI Chat Completions) para acceder a múltiples modelos de IA de forma segura, estable y sin bloqueos de cuota.
 
 > 🌐 **URL Pública Desplegada en Vercel:** [https://proyecto-m3-stiven-zabala.vercel.app](https://proyecto-m3-stiven-zabala.vercel.app)  
 > 📦 **Repositorio GitHub:** [https://github.com/Stivenzbl/ProyectoM3-StivenZabala](https://github.com/Stivenzbl/ProyectoM3-StivenZabala)
@@ -28,23 +29,21 @@ Una Single Page Application (SPA) full-stack y altamente escalable construida co
 +-----------------------------------------------------------------------+
 ```
 
-### 2. Vista de Chat Conversacional (con LocalStorage & Timestamps)
-- Diferenciación visual clara entre usuario y personaje, badge de memoria activa, botón copiar y selector directo de personaje.
+### 2. Vista de Chat Conversacional con Historial Multisesión
+- Panel lateral (Sidebar Drawer) estilo ChatGPT / Claude con guardado automático, títulos autogenerados, creación de nuevos chats y selector directo de personaje.
 
 ```
 +-----------------------------------------------------------------------+
-| 🤖 Chat AI                  Inicio   Chat   Acerca       [ ☀️ / 🌙 ] |
-+-----------------------------------------------------------------------+
-| ← Inicio | 🧪 Dr. Science (💾 Memoria activa) | [🧪 Dr. Science v]  [🗑️ Reset] |
-+-----------------------------------------------------------------------+
-| VOS                                                            14:35  |
-|   ¿Por qué el cielo es azul?                                         |
-|                                                                       |
-| DR. SCIENCE                                                    14:35  |
-|   La luz del sol se dispersa en la atmósfera. Las moléculas de aire |
-|   dispersan la luz azul en todas direcciones. 📋                      |
-+-----------------------------------------------------------------------+
-| [ Escribí tu mensaje... (presiona Enter para enviar)            ] (↑) |
+| 📜 HISTORIAL    | ← Inicio | 🧪 Dr. Science | [🧪 Dr. Science v] [🗑️ Reset]|
++-----------------+-----------------------------------------------------+
+| ➕ Nuevo Chat   | VOS                                           14:35 |
+|                 |   ¿Por qué el cielo es azul?                        |
+| 📜 CONVERSACIONES|                                                     |
+| • Dispersión... | DR. SCIENCE                                   14:35 |
+| • Experimento.. |   Por la dispersión de Rayleigh: las moléculas de   |
+| • Fotos Júpiter |   aire dispersan la luz azul en todas direcciones.  |
++-----------------+-----------------------------------------------------+
+|                 | [ Escribí tu mensaje... (Enter para enviar)   ] (↑)   |
 +-----------------------------------------------------------------------+
 ```
 
@@ -52,23 +51,28 @@ Una Single Page Application (SPA) full-stack y altamente escalable construida co
 
 ## 🎨 Características Destacadas & 😎 Extra Credit
 
-- **⚡ Arquitectura Serverless Segura**: La API Key de Google Gemini (`GEMINI_API_KEY`) nunca se expone en el cliente; las peticiones se realizan a través del backend Serverless `/api/chat`.
-- **🌙 Modo Oscuro / Claro (Dark & Light Theme Toggle)**: Conmutación dinámica de tema global con persistencia en `localStorage`, variables CSS y adaptación automática a las preferencias del sistema operativo.
-- **💾 Persistencia de Historial con `LocalStorage`**: Almacena y restaura las conversaciones de forma independiente para cada personaje, con indicador de estado (`💾 Historial restaurado` / `💾 Memoria activa`) y botón de reseteo (`🗑️ Reset`).
-- **🎭 Galería & Selector Rápido de 4 Personajes**:
-  1. 🧪 **Dr. Science**: Explicaciones didácticas y analogías simples.
+- **🌐 Integración con OpenRouter API Gateway**:
+  - Utiliza el estándar de la industria **OpenAI Chat Completions** (`/v1/chat/completions`) mediante la pasarela unificada de OpenRouter.
+  - Modelo por defecto: `openrouter/free`, el enrutador oficial que selecciona dinámicamente el modelo gratuito más saludable disponible.
+  - Elimina bloqueos estrictos de cuota RPM y la necesidad de usar SDKs propietarios rígidos.
+- **📜 Gestor de Historial Multisesión (Estilo ChatGPT / Claude)**:
+  - Guardado automático e independiente de múltiples conversaciones por personaje en `localStorage`.
+  - Generación dinámica de títulos de sesión a partir del primer mensaje del usuario.
+  - Botón **`➕ Nuevo Chat`** para iniciar conversaciones limpias sin perder los chats anteriores.
+  - Panel lateral interactivo (Sidebar Drawer en móviles) para alternar, consultar o eliminar sesiones guardadas.
+- **🧹 Filtro Anti-Fuga de Razonamiento (CoT & Safety Scrubber)**:
+  - Limpieza automática en 2 capas que remueve bloques `<think>...</think>`, análisis internos en inglés (`I need to stick to the rules...`) y metadatos de seguridad (`User Safety: safe`).
+  - Garantiza que las respuestas entregadas en la UI sean **100% en español fluido y dentro del personaje**.
+- **🌙 Modo Oscuro / Claro (Dark & Light Theme Toggle)**:
+  - Conmutación dinámica de tema global con persistencia en `localStorage`, variables CSS y adaptación automática a las preferencias del sistema operativo.
+- **♿ Accesibilidad Avanzada & Efectos Neón**:
+  - Enlace de accesibilidad *"Saltar al contenido principal"* con animación de resplandor neón pulsante (`@keyframes skipPulse`) al navegar con teclado (Tab).
+- **🎭 Galería de 4 Personajes**:
+  1. 🧪 **Dr. Science**: Explicaciones didácticas y analogías sencillas.
   2. 👨‍🍳 **Chef Claude**: Pasión culinaria, recetas y metáforas gastronómicas.
   3. 🕵️ **Detective**: Análisis lógico, deductivo y basado estrictamente en evidencia.
   4. 🚀 **Astro Explorer**: Divulgación astronómica, estrellas y agujeros negros.
-  - Incluye un selector desplegable directamente en la barra superior del chat para cambiar de personaje sin volver a la pantalla de inicio.
-- **⌨️ Composer Inteligente**:
-  - Envió directo con la tecla `Enter`.
-  - Copiado rápido de respuestas de la IA al portapapeles (`📋` $\rightarrow$ `✅`).
-  - Timestamps dinámicos por mensaje (`HH:MM`).
-  - Indicador animado de "Escribiendo..." (`...`).
-  - Reintento automático inteligente en caso de límite de tasa (`429 Rate Limit`).
-- **🥚 Huevos de Pascua (Easter Eggs)**: Respuestas especiales interactivas al enviar palabras clave como `ping`, `pong`, `42` o `gracias`.
-- **🧪 Cobertura de Tests con Vitest**: 17 pruebas unitarias automatizadas que garantizan la robustez de las funciones de storage, adaptadores de Gemini, recortado de historial, payloads y normalizador de respuestas.
+- **🧪 Cobertura Total con Vitest**: 22 pruebas unitarias automatizadas que garantizan la solidez de las funciones de storage, adaptadores de OpenRouter, recortado de historial, payloads y normalizador de respuestas.
 
 ---
 
@@ -78,24 +82,25 @@ Una Single Page Application (SPA) full-stack y altamente escalable construida co
 flowchart TD
     subgraph Frontend["Navegador (SPA)"]
         UI["Vista Chat (chat.js)"] --> Router["Router SPA (History API)"]
-        UI --> Engine["Chat Engine & History Manager"]
-        Engine --> LocalStorage["LocalStorage (Persistencia por personaje)"]
+        UI --> Engine["Chat Engine & Multi-Session History"]
+        Engine --> LocalStorage["LocalStorage (Sesiones por personaje)"]
         Engine --> Client["AI Client (fetch /api/chat)"]
     end
 
     subgraph Backend["Vercel Serverless Function"]
         Client --> API["/api/chat (Node.js)"]
-        API --> Proxy["Proxy & Error Handler"]
-        Proxy --> Adapter["Gemini Adapter (toGeminiContents)"]
-        Adapter --> Secret["API Key de Gemini (process.env)"]
+        API --> OpenRouterAdapter["OpenRouter Adapter (openrouter.js)"]
+        OpenRouterAdapter --> Secret["OPENROUTER_API_KEY (process.env)"]
     end
 
-    subgraph External["Google Generative AI Service"]
-        Secret --> Gemini["Google Gemini API (gemini-1.5-flash)"]
+    subgraph External["OpenRouter API Gateway"]
+        Secret --> ORGateway["https://openrouter.ai/api/v1/chat/completions"]
+        ORGateway --> Models["Modelos IA (Gemma, Llama, Gemini, DeepSeek)"]
     end
 
-    Gemini -->|Respuesta AI| Adapter
-    Adapter -->|Normalizer shape| UI
+    Models -->|Respuesta AI| ORGateway
+    ORGateway -->|JSON Chat Completion| OpenRouterAdapter
+    OpenRouterAdapter -->|Normalizer & CoT Cleaner| UI
 ```
 
 ---
@@ -114,7 +119,7 @@ flowchart TD
 ## 🛠️ Tecnologías Utilizadas
 
 - **Frontend**: HTML5 Semántico, CSS3 Dinámico (Custom Properties, Flexbox, Grid, Glassmorphic effects), JavaScript ES6+ Módulos.
-- **Backend / Middleware**: Vercel Serverless Functions (`api/chat.js`), SDK oficial `@google/generative-ai`.
+- **Backend / Middleware**: Vercel Serverless Functions (`api/chat.js`), OpenRouter API Gateway (`/v1/chat/completions`).
 - **Testing**: Vitest 1.6.0.
 - **Herramientas de Desarrollo**: Vite / Vercel CLI.
 
@@ -136,9 +141,9 @@ npm install
 ### 3. Configurar variables de entorno
 Crea un archivo `.env` en la raíz del proyecto (basándote en `.env.example`):
 ```env
-GEMINI_API_KEY=tu_api_key_de_google_gemini_aqui
+OPENROUTER_API_KEY=sk-or-v1-tu_clave_de_openrouter_aqui
 ```
-> Puedes obtener una API Key gratuita en [Google AI Studio](https://aistudio.google.com/).
+> Puedes obtener una clave de API gratuita en [OpenRouter.ai Keys](https://openrouter.ai/keys).
 
 ### 4. Iniciar el servidor local
 Para probar la aplicación junto con las funciones serverless de Vercel:
@@ -154,7 +159,7 @@ npm run dev
 
 ## 🧪 Ejecución de Pruebas Unitarias
 
-El proyecto incluye 17 tests unitarios ejecutados con **Vitest**:
+El proyecto incluye **22 tests unitarios** ejecutados con **Vitest**:
 
 ```bash
 # Ejecutar suite de pruebas una sola vez
@@ -165,11 +170,12 @@ npm test
 ```
 
 ### Resumen de Suites de Test:
-- `tests/storage.test.js`: Valida guardado, recuperación y limpieza en `localStorage`.
-- `tests/payload.test.js`: Valida la construcción correcta del payload y rechazo de roles prohibidos.
-- `tests/normalizer.test.js`: Valida la extracción de texto y detección de respuestas truncadas.
-- `tests/history.test.js`: Valida la inmutabilidad y recorte de historial (`getTrimmedHistory`).
-- `tests/gemini.test.js`: Valida el mapeo de roles (`assistant` $\rightarrow$ `model`).
+- `tests/openrouter.test.js`: Valida el adaptador de OpenRouter, formato OpenAI y detección de claves.
+- `tests/storage.test.js`: Valida la gestión multisesión, títulos autogenerados, guardado y eliminación en `localStorage`.
+- `tests/payload.test.js`: Valida la construcción del payload con directivas estrictas de idioma.
+- `tests/normalizer.test.js`: Valida la eliminación de pensamientos en inglés (`CoT scrubber`) y etiquetas de seguridad.
+- `tests/history.test.js`: Valida la inmutabilidad y recorte del historial (`getTrimmedHistory`).
+- `tests/gemini.test.js`: Valida compatibilidad y formato de contenido.
 - `tests/aiClient.test.js`: Valida la gestión de errores HTTP y respuestas de la API.
 
 ---
@@ -185,8 +191,8 @@ npm test
    npx vercel --prod
    ```
 3. Configurar la variable de entorno en el panel de Vercel:
-   - **Nombre:** `GEMINI_API_KEY`
-   - **Valor:** Tu clave de API de Google AI Studio.
+   - **Nombre:** `OPENROUTER_API_KEY`
+   - **Valor:** Tu clave de API de OpenRouter (`sk-or-v1-...`).
 
 ---
 
@@ -194,9 +200,10 @@ npm test
 
 Durante el desarrollo de este proyecto integrador se utilizaron herramientas de IA como asistente de programación de acuerdo con los lineamientos de la consigna:
 
-1. **Definición de System Prompts**: Se iteraron prompts para cada personaje en Google AI Studio para asegurar respuestas concisas (máximo 3 líneas) y con personalidad consistente.
-2. **Modularización & Clean Architecture**: Se utilizó IA para diseñar una separación estricta entre la UI (`src/ui/render.js`), el motor de chat (`src/engine/`) y las Serverless Functions (`api/chat.js`).
-3. **Refactorización de CSS**: Asistencia en la creación del tema dinámico claro/oscuro utilizando CSS Custom Properties (`[data-theme="light"]`) sin romper el diseño futurista de neón.
+1. **Migración a OpenRouter API Gateway**: Se diseñó una arquitectura desacoplada basada en el estándar universal de OpenAI `/v1/chat/completions`.
+2. **Definición de System Prompts**: Se estructuraron directivas inviolables para garantizar respuestas concisas (máximo 3 líneas) y 100% en idioma español.
+3. **Gestor Multisesión de Historial**: Implementación del sidebar lateral e inmutabilidad de datos en `localStorage`.
+4. **Refactorización de CSS**: Creación del sistema de temas claro/oscuro y animaciones neón de accesibilidad.
 
 ---
 

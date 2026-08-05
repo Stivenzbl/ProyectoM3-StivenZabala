@@ -105,7 +105,7 @@ export function createSystemPrompt(character) {
  */
 export function buildPayload(character, messages) {
   return {
-    model: "gemini-2.0-flash",
+    model: "openrouter/free",
     system: createSystemPrompt(character),
     messages,
     max_tokens: 500,
