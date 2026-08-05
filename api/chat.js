@@ -12,7 +12,7 @@
  */
 
 import { GoogleGenerativeAI } from "@google/generative-ai";
-import { isRateLimitError, getHttpStatus } from "./utils/errors.js";
+import { isRateLimitError, isInvalidApiKeyError, getHttpStatus } from "./utils/errors.js";
 import { toGeminiContents } from "./utils/gemini.js";
 import { parseJsonBody, getMessages, getGenerationSettings } from "./utils/request.js";
 import { createChatResponse } from "./utils/response.js";
@@ -72,8 +72,8 @@ export default async function handler(req, res) {
       } catch (err) {
         lastError = err;
 
-        // Si es 429 Rate Limit, no probar otros modelos (el rate limit aplica a la API Key entera)
-        if (isRateLimitError(err)) {
+        // Si es 429 Rate Limit o API Key no válida, cortar inmediatamente la iteración
+        if (isRateLimitError(err) || isInvalidApiKeyError(err)) {
           break;
         }
 
@@ -100,6 +100,12 @@ export default async function handler(req, res) {
       return res.status(429).json({
         error: "Límite de peticiones por minuto alcanzado (Google Gemini Free Tier). Espera 15 segundos.",
         retryAfterSeconds: 15,
+      });
+    }
+
+    if (isInvalidApiKeyError(error)) {
+      return res.status(400).json({
+        error: "🔑 Clave de API de Gemini no válida o expirada. Por favor configura una API Key válida de Google AI Studio (formato AIzaSy...) en GEMINI_API_KEY.",
       });
     }
 
