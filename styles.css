@@ -33,6 +33,18 @@ ul { list-style: none; }
   --font-body: "Sora", system-ui, -apple-system, sans-serif;
 }
 
+[data-theme="light"] {
+  --bg-void: #f1f5f9;
+  --bg-panel: #ffffff;
+  --bg-panel-alt: #f8fafc;
+  --border-subtle: rgba(51, 65, 85, 0.15);
+  --border-strong: rgba(51, 65, 85, 0.3);
+
+  --text-primary: #0f172a;
+  --text-muted: #475569;
+  --text-faint: #94a3b8;
+}
+
 /* === BASE === */
 body {
   font-family: var(--font-body);
@@ -264,6 +276,54 @@ body::after {
 .character-card.theme-science { --card-accent: var(--neon-cyan); --card-glow: rgba(34, 224, 255, 0.35); }
 .character-card.theme-chef { --card-accent: var(--neon-orange); --card-glow: rgba(255, 138, 61, 0.32); }
 .character-card.theme-detective { --card-accent: var(--neon-purple); --card-glow: rgba(177, 107, 255, 0.35); }
+.character-card.theme-astro { --card-accent: var(--neon-pink); --card-glow: rgba(255, 95, 199, 0.35); }
+
+.theme-toggle {
+  background: var(--bg-panel-alt);
+  border: 1px solid var(--border-subtle);
+  color: var(--text-primary);
+  border-radius: 0.5rem;
+  padding: 0.25rem 0.55rem;
+  font-size: 0.9rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.theme-toggle:hover {
+  border-color: var(--neon-cyan);
+  box-shadow: 0 0 12px rgba(34, 224, 255, 0.25);
+  transform: scale(1.05);
+}
+
+.character-select-wrapper {
+  display: inline-block;
+}
+
+.chat-header__select {
+  background: var(--bg-panel-alt);
+  border: 1px solid var(--border-subtle);
+  color: var(--text-primary);
+  border-radius: 0.375rem;
+  padding: 0.25rem 0.5rem;
+  font-family: var(--font-body);
+  font-size: 0.78rem;
+  outline: none;
+  cursor: pointer;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.chat-header__select:hover, .chat-header__select:focus {
+  border-color: var(--chat-primary);
+  box-shadow: 0 0 10px var(--chat-primary-light);
+}
+
+.chat-header__select option {
+  background: var(--bg-panel);
+  color: var(--text-primary);
+}
 
 .character-card__avatar {
   font-size: 1.75rem;
@@ -332,6 +392,16 @@ body::after {
   --chat-bubble-user: linear-gradient(135deg, #7c3aed, #b16bff);
   --chat-avatar-border: var(--neon-purple);
   --chat-header-bg: #120a1c;
+}
+
+.view-chat.theme-astro {
+  --chat-primary: var(--neon-pink);
+  --chat-primary-hover: #e044ab;
+  --chat-primary-light: rgba(255, 95, 199, 0.16);
+  --chat-accent: var(--neon-purple-soft);
+  --chat-bubble-user: linear-gradient(135deg, #db2777, #ff5fc7);
+  --chat-avatar-border: var(--neon-pink);
+  --chat-header-bg: #1c0a18;
 }
 
 /* --- Chat App wrapper (fill height) --- */
