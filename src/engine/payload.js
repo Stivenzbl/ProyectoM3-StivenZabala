@@ -84,13 +84,18 @@ export function getCharacter(key) {
   return CHARACTERS[key] ?? CHARACTERS.science;
 }
 
+const STRICT_SPANISH_DIRECTIVE = `
+REGLAS OBLIGATORIAS E INVIOLABLES DE RESPUESTA:
+1. Responde SIEMPRE única y exclusivamente en idioma ESPAÑOL.
+2. NUNCA incluyas tu proceso de pensamiento interno, análisis en inglés (como 'Okay, the user is asking...'), ni metadatos de seguridad (como 'User Safety: safe').
+3. Entrega ÚNICAMENTE la respuesta final del personaje dirigida al usuario de forma clara y directa en máximo 3 líneas.`;
+
 /*
  * createSystemPrompt(character)
- * Esta separado para poder enriquecer el prompt con datos dinamicos
- * sin mezclar esa decision con buildPayload().
+ * Enriquece el prompt del personaje con directivas estrictas de idioma y formato.
  */
 export function createSystemPrompt(character) {
-  return character.system;
+  return `${character.system.trim()}\n${STRICT_SPANISH_DIRECTIVE}`;
 }
 
 /*

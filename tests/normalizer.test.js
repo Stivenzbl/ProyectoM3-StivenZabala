@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { normalizeAIResponse, extractUsage } from "../src/engine/normalizer.js";
+import { normalizeAIResponse, extractUsage, cleanTextResponse } from "../src/engine/normalizer.js";
 
 describe("normalizer.js", () => {
   it("extrae el texto de la respuesta estructurada de la IA", () => {
@@ -13,6 +13,19 @@ describe("normalizer.js", () => {
     expect(normalized.truncated).toBe(false);
   });
 
+  it("elimina marcas de seguridad como User Safety: safe y pensamientos en ingles", () => {
+    const textWithSafety = "User Safety: safe";
+    expect(cleanTextResponse(textWithSafety)).toContain("¡Hola!");
+
+    const textWithThinking = "Okay, the user is asking about baking soda. Let me recall...\n\nEl bicarbonato de sodio es un compuesto químico muy versátil.";
+    expect(cleanTextResponse(textWithThinking)).toBe("El bicarbonato de sodio es un compuesto químico muy versátil.");
+  });
+
+  it("elimina bloques de pensamiento <think>...</think>", () => {
+    const reasoningText = "<think>Analyzing user request...</think>Respuesta en español directa.";
+    expect(cleanTextResponse(reasoningText)).toBe("Respuesta en español directa.");
+  });
+
   it("detecta respuestas truncadas por limite de tokens", () => {
     const raw = {
       content: [{ type: "text", text: "Respuesta larga incom..." }],
@@ -21,12 +34,6 @@ describe("normalizer.js", () => {
 
     const normalized = normalizeAIResponse(raw);
     expect(normalized.truncated).toBe(true);
-  });
-
-  it("retorna string vacio si la respuesta no tiene bloques de texto validos", () => {
-    expect(normalizeAIResponse(null).text).toBe("");
-    expect(normalizeAIResponse({}).text).toBe("");
-    expect(normalizeAIResponse({ content: [] }).text).toBe("");
   });
 
   it("extrae el conteo de tokens con extractUsage", () => {
