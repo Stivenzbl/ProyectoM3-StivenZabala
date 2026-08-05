@@ -5,22 +5,23 @@ import { renderNotFound } from "./views/notFound.js";
 
 /*
  * cleanPath(pathname)
- * Normaliza la URL removiendo barras inclinadas sobrantes (trailing slashes)
- * para evitar errores 404 al recargar o navegar a rutas como /chat/science/
+ * Normaliza la URL removiendo barras inclinadas sobrantes (trailing slashes),
+ * query strings y fragmentos hash para garantizar que el enrutador cliente
+ * responda correctamente incluso al recargar páginas o ingresar directamente a subrutas.
  */
 export function cleanPath(pathname) {
   if (!pathname || typeof pathname !== "string") return "/";
-  let cleaned = pathname.trim();
-  if (cleaned.length > 1 && cleaned.endsWith("/")) {
+  let cleaned = pathname.trim().split("?")[0].split("#")[0];
+  while (cleaned.length > 1 && cleaned.endsWith("/")) {
     cleaned = cleaned.slice(0, -1);
   }
   return cleaned || "/";
 }
 
 const routes = [
-  { pattern: /^\/(?:home)?$/i, render: (param) => renderHome() },
-  { pattern: /^\/chat(?:\/([a-zA-Z0-9_-]+))?$/i, render: (param) => renderChat(param) },
-  { pattern: /^\/about$/i, render: (param) => renderAbout() },
+  { pattern: /^\/(?:home)?\/?$/i, render: (param) => renderHome() },
+  { pattern: /^\/chat(?:\/([a-zA-Z0-9_-]+))?\/?$/i, render: (param) => renderChat(param) },
+  { pattern: /^\/about\/?$/i, render: (param) => renderAbout() },
 ];
 
 export function router() {
