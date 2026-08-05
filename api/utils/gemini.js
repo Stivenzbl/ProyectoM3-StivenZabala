@@ -7,15 +7,22 @@
  * Gemini espera:
  *   contents: [{ role: "user" | "model", parts: [{ text }] }]
  *
- * Esta transformacion manda TODO el historial recortado, no solo el ultimo
- * mensaje. Asi el modelo conserva contexto entre turnos.
+ * Mantiene la regla estricta de Gemini API: contents[0] SIEMPRE debe ser rol 'user'.
  */
 
 export function toGeminiContents(messages) {
-  return messages
+  if (!Array.isArray(messages)) return [];
+
+  const formatted = messages
     .filter((msg) => msg?.role === "user" || msg?.role === "assistant")
     .map((msg) => ({
       role: msg.role === "assistant" ? "model" : "user",
       parts: [{ text: String(msg.content ?? "") }],
     }));
+
+  // Garantizar que el primer mensaje enviado a Gemini sea del usuario
+  const firstUserIndex = formatted.findIndex((msg) => msg.role === "user");
+  if (firstUserIndex === -1) return [];
+
+  return formatted.slice(firstUserIndex);
 }
