@@ -84,6 +84,10 @@ export function getCharacter(key) {
   return CHARACTERS[key] ?? CHARACTERS.science;
 }
 
+export function isValidCharacterKey(key) {
+  return Boolean(key && CHARACTERS[key]);
+}
+
 const STRICT_SPANISH_DIRECTIVE = `
 REGLAS OBLIGATORIAS E INVIOLABLES DE RESPUESTA:
 1. Responde SIEMPRE única y exclusivamente en idioma ESPAÑOL.

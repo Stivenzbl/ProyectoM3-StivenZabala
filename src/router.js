@@ -2,12 +2,14 @@ import { renderHome } from "./views/home.js";
 import { renderChat } from "./views/chat.js";
 import { renderAbout } from "./views/about.js";
 import { renderNotFound } from "./views/notFound.js";
+import { isValidCharacterKey } from "./engine/payload.js";
 
 /*
  * cleanPath(pathname)
  * Normaliza la URL removiendo barras inclinadas sobrantes (trailing slashes),
- * query strings y fragmentos hash para garantizar que el enrutador cliente
- * responda correctamente incluso al recargar páginas o ingresar directamente a subrutas.
+ * query strings y fragmentos hash. Si la ruta es válida (ej. /chat/science/),
+ * la limpia a /chat/science. Si la ruta no existe (ej. /algo), retorna la ruta limpia
+ * para que el enrutador muestre la vista 404 Not Found.
  */
 export function cleanPath(pathname) {
   if (!pathname || typeof pathname !== "string") return "/";
@@ -18,25 +20,48 @@ export function cleanPath(pathname) {
   return cleaned || "/";
 }
 
-const routes = [
-  { pattern: /^\/(?:home)?\/?$/i, render: (param) => renderHome() },
-  { pattern: /^\/chat(?:\/([a-zA-Z0-9_-]+))?\/?$/i, render: (param) => renderChat(param) },
-  { pattern: /^\/about\/?$/i, render: (param) => renderAbout() },
-];
-
 export function router() {
   const rawPath = window.location.pathname;
   const path = cleanPath(rawPath);
 
-  for (const route of routes) {
-    const match = path.match(route.pattern);
-    if (match) {
-      route.render(match[1] || null);
+  // 1. Ruta Inicio (/ o /home)
+  if (/^\/(?:home)?$/i.test(path)) {
+    renderHome();
+    updateActiveLink(path);
+    return;
+  }
+
+  // 2. Ruta Chat sin personaje especifico -> abre chat con Dr. Science por defecto
+  if (/^\/chat$/i.test(path)) {
+    renderChat("science");
+    updateActiveLink(path);
+    return;
+  }
+
+  // 3. Ruta Chat con personaje específico (/chat/:characterKey)
+  const chatMatch = path.match(/^\/chat\/([a-zA-Z0-9_-]+)$/i);
+  if (chatMatch) {
+    const characterKey = chatMatch[1];
+    // Verificar si el personaje realmente existe en el sistema
+    if (isValidCharacterKey(characterKey)) {
+      renderChat(characterKey);
       updateActiveLink(path);
       return;
     }
+    // Si el personaje no existe (ej. /chat/personaje-falso), mostrar vista 404
+    renderNotFound();
+    updateActiveLink(path);
+    return;
   }
 
+  // 4. Ruta Acerca de (/about)
+  if (/^\/about$/i.test(path)) {
+    renderAbout();
+    updateActiveLink(path);
+    return;
+  }
+
+  // 5. Cualquier otra ruta inexistente (ej. /algo, /xyz, /contacto, /test) -> Vista 404 Not Found
   renderNotFound();
   updateActiveLink(path);
 }
