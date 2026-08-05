@@ -21,7 +21,7 @@ export function renderHome() {
     <section class="home-hero">
       <p class="home-hero__eyebrow">Proyecto Integrador · M3</p>
       <h1 class="home-hero__title">🤖 PIM3 Chat AI</h1>
-      <p class="home-hero__subtitle">Elige a tu personaje favorito e inicia una conversación inteligente impulsada por Gemini Serverless.</p>
+      <p class="home-hero__subtitle">Elige a tu personaje favorito e inicia una conversación inteligente impulsada por OpenRouter API Gateway Serverless.</p>
 
       <div class="character-grid">
         ${cardsHtml}
@@ -29,4 +29,3 @@ export function renderHome() {
     </section>
   `;
 }
-
