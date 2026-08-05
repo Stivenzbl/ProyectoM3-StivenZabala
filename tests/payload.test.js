@@ -9,7 +9,7 @@ describe("payload.js", () => {
     const messages = [{ role: "user", content: "hola" }];
     const payload = buildPayload(character, messages);
 
-    expect(payload.model).toBe("gemini-3.5-flash");
+    expect(payload.model).toBe("gemini-1.5-flash");
     expect(payload.system).toContain("Dr. Science");
     expect(payload.messages).toBe(messages);
     expect(isValidPayload(payload)).toBe(true);
@@ -19,7 +19,7 @@ describe("payload.js", () => {
   // un mensaje mas. En esta app, messages[] solo acepta user o assistant.
   it("rechaza un payload que pone role system dentro de messages[]", () => {
     const payload = {
-      model: "gemini-3.5-flash",
+      model: "gemini-1.5-flash",
       system: "Prompt correcto",
       messages: [{ role: "system", content: "Prompt incorrecto" }],
     };
