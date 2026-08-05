@@ -11,6 +11,45 @@ Una Single Page Application (SPA) full-stack y altamente escalable construida co
 
 ---
 
+## 📸 Capturas de Pantalla (Preview de la Aplicación)
+
+### 1. Vista de Inicio (Home — Galería de Personajes)
+- Selección interactiva entre múltiples personajes con tarjetas neón futuristas en modo oscuro y adaptables en modo claro.
+
+```
++-----------------------------------------------------------------------+
+| 🤖 Chat AI                  Inicio   Chat   Acerca       [ ☀️ / 🌙 ] |
++-----------------------------------------------------------------------+
+|                       PROYECTO INTEGRADOR · M3                        |
+|                         🤖 PIM3 CHAT AI                               |
+|        Elige a tu personaje favorito e inicia una conversación         |
+|                                                                       |
+|  [ 🧪 Dr. Science ]   [ 👨‍🍳 Chef Claude ]   [ 🕵️ Detective ]   [ 🚀 Astro ]  |
++-----------------------------------------------------------------------+
+```
+
+### 2. Vista de Chat Conversacional (con LocalStorage & Timestamps)
+- Diferenciación visual clara entre usuario y personaje, badge de memoria activa, botón copiar y selector directo de personaje.
+
+```
++-----------------------------------------------------------------------+
+| 🤖 Chat AI                  Inicio   Chat   Acerca       [ ☀️ / 🌙 ] |
++-----------------------------------------------------------------------+
+| ← Inicio | 🧪 Dr. Science (💾 Memoria activa) | [🧪 Dr. Science v]  [🗑️ Reset] |
++-----------------------------------------------------------------------+
+| VOS                                                            14:35  |
+|   ¿Por qué el cielo es azul?                                         |
+|                                                                       |
+| DR. SCIENCE                                                    14:35  |
+|   La luz del sol se dispersa en la atmósfera. Las moléculas de aire |
+|   dispersan la luz azul en todas direcciones. 📋                      |
++-----------------------------------------------------------------------+
+| [ Escribí tu mensaje... (presiona Enter para enviar)            ] (↑) |
++-----------------------------------------------------------------------+
+```
+
+---
+
 ## 🎨 Características Destacadas & 😎 Extra Credit
 
 - **⚡ Arquitectura Serverless Segura**: La API Key de Google Gemini (`GEMINI_API_KEY`) nunca se expone en el cliente; las peticiones se realizan a través del backend Serverless `/api/chat`.
