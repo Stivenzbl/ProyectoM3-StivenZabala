@@ -1,5 +1,14 @@
-import { describe, it, expect, beforeEach, vi } from "vitest";
-import { saveHistory, loadHistory, clearStorageHistory, hasSavedHistory } from "../src/engine/storage.js";
+import { describe, it, expect, beforeEach } from "vitest";
+import {
+  saveHistory,
+  loadHistory,
+  clearStorageHistory,
+  hasSavedHistory,
+  createNewSession,
+  getCharacterSessions,
+  deleteSession,
+  saveSessionMessages,
+} from "../src/engine/storage.js";
 
 // Mock de localStorage
 const localStorageMock = (() => {
@@ -20,7 +29,7 @@ const localStorageMock = (() => {
 
 Object.defineProperty(global, "localStorage", { value: localStorageMock });
 
-describe("storage.js", () => {
+describe("storage.js — Gestor Multisesión", () => {
   beforeEach(() => {
     localStorage.clear();
   });
@@ -38,7 +47,7 @@ describe("storage.js", () => {
     expect(loaded).toEqual(history);
   });
 
-  it("devuelve array vacio si no hay historial guardado", () => {
+  it("devuelve array vacío si no hay historial guardado", () => {
     const loaded = loadHistory("chef");
     expect(loaded).toEqual([]);
     expect(hasSavedHistory("chef")).toBe(false);
@@ -51,5 +60,30 @@ describe("storage.js", () => {
     clearStorageHistory("detective");
     expect(hasSavedHistory("detective")).toBe(false);
     expect(loadHistory("detective")).toEqual([]);
+  });
+
+  it("crea múltiples sesiones independientes para un mismo personaje", () => {
+    const session1 = createNewSession("astro");
+    saveSessionMessages("astro", session1.id, [{ role: "user", content: "Viaje a Marte" }]);
+
+    const session2 = createNewSession("astro");
+    saveSessionMessages("astro", session2.id, [{ role: "user", content: "Fotos de Júpiter" }]);
+
+    const sessions = getCharacterSessions("astro");
+    expect(sessions).toHaveLength(2);
+    expect(sessions[0].title).toBe("Fotos de Júpiter");
+    expect(sessions[1].title).toBe("Viaje a Marte");
+  });
+
+  it("permite eliminar una sesión específica del historial", () => {
+    const s1 = createNewSession("chef");
+    saveSessionMessages("chef", s1.id, [{ role: "user", content: "Receta de Pastas" }]);
+    const s2 = createNewSession("chef");
+    saveSessionMessages("chef", s2.id, [{ role: "user", content: "Sopa de tomate" }]);
+
+    deleteSession(s1.id, "chef");
+    const charSessions = getCharacterSessions("chef");
+    expect(charSessions).toHaveLength(1);
+    expect(charSessions[0].id).toBe(s2.id);
   });
 });
