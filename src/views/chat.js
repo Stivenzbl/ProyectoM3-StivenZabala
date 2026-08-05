@@ -1,17 +1,24 @@
-﻿/*
- * views/chat.js — Chat engine completo (Resolution)
+/*
+ * views/chat.js — Vista y Motor principal de Chat PIM3
  *
  * Pipeline:
  *   submit → appendUserMessage → getTrimmedHistory → buildPayload
  *   → callAI → normalizeAIResponse → appendAssistantMessage → appendMessage
  *
- * Defensas: isLoading, lockUI, debounce, retry 429, easter eggs
+ * Funcionalidades:
+ * - LocalStorage Persistence: guarda y restaura historial entre recargas
+ * - UI Lock/Unlock: previene doble submit durante fetching
+ * - Auto Retry: manejo inteligente de 429 Rate Limit
+ * - Copy to clipboard & Timestamps en cada mensaje
+ * - Easter eggs (ping, pong, 42, gracias)
  */
 
 import { appendUserMessage, appendAssistantMessage, getTrimmedHistory, resetHistory } from "../engine/history.js";
-import { buildPayload, getCharacter } from "../engine/payload.js";
+import { buildPayload, getCharacter, getAllCharacters } from "../engine/payload.js";
 import { callAI } from "../engine/aiClient.js";
 import { normalizeAIResponse } from "../engine/normalizer.js";
+import { saveHistory, loadHistory, clearStorageHistory } from "../engine/storage.js";
+import { navigateTo } from "../router.js";
 import {
   lockUI,
   unlockUI,
@@ -25,13 +32,14 @@ import {
 
 let chatHistory = [];
 let currentCharacter = null;
+let activeCharacterKey = "science";
 let isLoading = false;
 
 const EASTER_EGGS = {
   ping: { text: "🏓 ¡pong!", meta: "🥚 Easter egg" },
   pong: { text: "🏓 ¡ping!", meta: "🥚 Easter egg" },
   "42": { text: "🌌 La respuesta al sentido de la vida, el universo y todo lo demás.", meta: "🥚 Easter egg" },
-  gracias: { text: "¡De nada! 😊 Recordá: la ciencia nunca termina, solo encuentra nuevas preguntas.", meta: "" },
+  gracias: { text: "¡De nada! 😊 Recordá: la ciencia y la curiosidad nunca terminan.", meta: "" },
 };
 
 function checkEasterEgg(text) {
@@ -40,14 +48,6 @@ function checkEasterEgg(text) {
 
 function wait(ms) {
   return new Promise((resolve) => setTimeout(resolve, ms));
-}
-
-function debounce(fn, delay) {
-  let timer = null;
-  return function (...args) {
-    clearTimeout(timer);
-    timer = setTimeout(() => fn.apply(this, args), delay);
-  };
 }
 
 async function retryOnceAfter429(error, payload) {
@@ -62,6 +62,7 @@ async function retryOnceAfter429(error, payload) {
   hideTyping();
   const { text: aiText, truncated } = normalizeAIResponse(raw);
   chatHistory = appendAssistantMessage(chatHistory, aiText);
+  saveHistory(activeCharacterKey, chatHistory);
   appendMessage("assistant", aiText || "No recibí texto en la respuesta.", truncated ? "⚠️ truncada" : "");
   showStatus("hidden");
 }
@@ -71,16 +72,19 @@ async function sendMessage(text) {
   const trimmed = text.trim();
   if (!trimmed) return;
 
-  document.querySelector("#composer-input").value = "";
+  const inputEl = document.querySelector("#composer-input");
+  if (inputEl) inputEl.value = "";
   isLoading = true;
   lockUI();
 
   chatHistory = appendUserMessage(chatHistory, trimmed);
+  saveHistory(activeCharacterKey, chatHistory);
   appendMessage("user", trimmed);
 
   const egg = checkEasterEgg(trimmed);
   if (egg) {
     chatHistory = appendAssistantMessage(chatHistory, egg.text);
+    saveHistory(activeCharacterKey, chatHistory);
     appendMessage("assistant", egg.text, egg.meta, true);
     isLoading = false;
     unlockUI();
@@ -97,8 +101,10 @@ async function sendMessage(text) {
     const raw = await callAI(payload);
     hideTyping();
     const { text: aiText } = normalizeAIResponse(raw);
-    chatHistory = appendAssistantMessage(chatHistory, aiText);
-    appendMessage("assistant", aiText || "No recibí texto en la respuesta.");
+    const finalResponse = aiText || "No recibí texto en la respuesta.";
+    chatHistory = appendAssistantMessage(chatHistory, finalResponse);
+    saveHistory(activeCharacterKey, chatHistory);
+    appendMessage("assistant", finalResponse);
     showStatus("hidden");
   } catch (err) {
     hideTyping();
@@ -108,12 +114,12 @@ async function sendMessage(text) {
         await retryOnceAfter429(err, payload);
       } catch (retryErr) {
         hideTyping();
-        showStatus("error", "❌ Error al reintentar. Intentá más tarde.");
+        showStatus("error", "❌ Rate limit excedido. Intenta de nuevo en unos momentos.");
         console.error("[retry failed]", retryErr);
       }
     } else {
       console.error("[sendMessage error]", err);
-      showStatus("error", "❌ Error de conexión. Revisá la consola.");
+      showStatus("error", "❌ Error de conexión con la IA. Verifica tu API Key o conexión.");
     }
   } finally {
     isLoading = false;
@@ -122,9 +128,17 @@ async function sendMessage(text) {
 }
 
 export function renderChat(characterKey) {
-  const key = characterKey || "science";
-  currentCharacter = getCharacter(key);
+  activeCharacterKey = characterKey || "science";
+  currentCharacter = getCharacter(activeCharacterKey);
   chatHistory = resetHistory();
+
+  const allChars = getAllCharacters();
+  const selectOptionsHtml = allChars
+    .map(
+      (c) =>
+        `<option value="${c.id}" ${c.id === activeCharacterKey ? "selected" : ""}>${c.avatar} ${c.name}</option>`
+    )
+    .join("");
 
   const $app = document.querySelector("#app");
   $app.className = "view-chat";
@@ -132,21 +146,29 @@ export function renderChat(characterKey) {
   $app.innerHTML = `
     <div class="chat-app">
       <header class="chat-header">
-        <a href="/" class="chat-header__back">← Volver</a>
+        <a href="/" class="chat-header__back" title="Volver al inicio">← Inicio</a>
         <div class="chat-header__info">
           <span class="chat-header__avatar">${currentCharacter.avatar}</span>
-          <h2 class="chat-header__name">${currentCharacter.name}</h2>
+          <div class="chat-header__titles">
+            <h2 class="chat-header__name">${currentCharacter.name}</h2>
+            <span class="chat-header__status-badge" id="storage-badge">💾 Memoria activa</span>
+          </div>
         </div>
         <div class="chat-header__actions">
+          <div class="character-select-wrapper">
+            <select id="char-select" class="chat-header__select" aria-label="Cambiar personaje">
+              ${selectOptionsHtml}
+            </select>
+          </div>
           <span class="counter-badge" id="counter-badge">💬 #0</span>
-          <button id="reset-btn" class="chat-header__reset" title="Nueva conversación">↺</button>
+          <button id="reset-btn" class="chat-header__reset" title="Limpiar historial de conversación" aria-label="Limpiar historial">🗑️ Reset</button>
         </div>
       </header>
 
       <main class="chat-messages" id="messages" aria-live="polite" aria-label="Mensajes del chat">
         <div class="messages-empty" id="messages-empty">
           <div class="messages-empty__avatar">${currentCharacter.avatar}</div>
-          <p>👋 ¡Hola! Soy el <strong>${currentCharacter.name}</strong>.<br>Preguntame lo que quieras.</p>
+          <p>👋 ¡Hola! Soy el <strong>${currentCharacter.name}</strong>.<br>Pregúntame lo que quieras.</p>
         </div>
       </main>
 
@@ -156,8 +178,8 @@ export function renderChat(characterKey) {
 
       <form class="composer" id="composer-form" autocomplete="off" novalidate>
         <input class="composer__input" id="composer-input" type="text"
-          placeholder="Escribí tu mensaje..." aria-label="Mensaje" maxlength="500">
-        <button class="composer__btn" id="send-btn" type="submit" aria-label="Enviar">↑</button>
+          placeholder="Escribí tu mensaje... (presiona Enter para enviar)" aria-label="Mensaje" maxlength="500">
+        <button class="composer__btn" id="send-btn" type="submit" aria-label="Enviar mensaje">↑</button>
       </form>
     </div>
   `;
@@ -168,24 +190,71 @@ export function renderChat(characterKey) {
   clearMessages();
   updateCharacterUI(currentCharacter);
 
-  const debouncedSend = debounce(() => {
-    const text = document.querySelector("#composer-input").value;
-    sendMessage(text);
-  }, 300);
+  // Restaurar historial guardado desde LocalStorage si existe
+  const savedMessages = loadHistory(activeCharacterKey);
+  if (savedMessages.length > 0) {
+    chatHistory = savedMessages;
+    savedMessages.forEach((msg) => {
+      appendMessage(msg.role, msg.content);
+    });
+    const storageBadge = document.querySelector("#storage-badge");
+    if (storageBadge) {
+      storageBadge.textContent = "💾 Historial restaurado";
+      storageBadge.classList.add("restored");
+    }
+  }
 
-  document.querySelector("#composer-form").addEventListener("submit", (event) => {
-    event.preventDefault();
-    debouncedSend();
-  });
+  // Listener para cambio rápido de personaje
+  const charSelect = document.querySelector("#char-select");
+  if (charSelect) {
+    charSelect.addEventListener("change", (e) => {
+      const selectedKey = e.target.value;
+      if (selectedKey !== activeCharacterKey) {
+        navigateTo(`/chat/${selectedKey}`);
+      }
+    });
+  }
 
-  document.querySelector("#reset-btn").addEventListener("click", () => {
-    chatHistory = resetHistory();
-    clearMessages();
-  });
+  // Manejo de envío con formulario o tecla Enter
+  const formEl = document.querySelector("#composer-form");
+  const inputEl = document.querySelector("#composer-input");
+
+  if (inputEl) {
+    inputEl.addEventListener("keydown", (event) => {
+      if (event.key === "Enter" && !event.shiftKey) {
+        event.preventDefault();
+        sendMessage(inputEl.value);
+      }
+    });
+  }
+
+  if (formEl) {
+    formEl.addEventListener("submit", (event) => {
+      event.preventDefault();
+      if (inputEl) sendMessage(inputEl.value);
+    });
+  }
+
+  const resetBtn = document.querySelector("#reset-btn");
+  if (resetBtn) {
+    resetBtn.addEventListener("click", () => {
+      if (confirm(`¿Deseas borrar el historial con ${currentCharacter.name}?`)) {
+        chatHistory = resetHistory();
+        clearStorageHistory(activeCharacterKey);
+        clearMessages();
+        const storageBadge = document.querySelector("#storage-badge");
+        if (storageBadge) {
+          storageBadge.textContent = "💾 Memoria limpia";
+          storageBadge.classList.remove("restored");
+        }
+      }
+    });
+  }
 }
 
 function getThemeKey(name) {
   if (name.includes("Chef")) return "chef";
   if (name.includes("Detective")) return "detective";
+  if (name.includes("Astro")) return "astro";
   return "science";
 }

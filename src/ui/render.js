@@ -77,21 +77,56 @@ export function hideTyping() {
   document.querySelector("#typing-indicator")?.remove();
 }
 
-export function appendMessage(role, text, meta = "", isEasterEgg = false) {
+export function appendMessage(role, text, meta = "", isEasterEgg = false, customTime = null) {
   const $empty = getEmpty();
   const $msgs = getMessages();
   if ($empty) $empty.classList.add("hidden");
   if (!$msgs) return;
 
+  const timeStr = customTime || new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
   const div = document.createElement("div");
   let className = `message message--${role}`;
   if (isEasterEgg) className += " message--easter-egg";
   div.className = className;
+
+  const isUser = role === "user";
+  const authorText = isUser ? "Vos" : getCurrentCharacterName();
+
   div.innerHTML = `
-    <span class="message__author">${role === "user" ? "Vos" : getCurrentCharacterName()}</span>
-    <div class="message__bubble">${escapeHtml(String(text))}</div>
+    <div class="message__header">
+      <span class="message__author">${escapeHtml(authorText)}</span>
+      <span class="message__time">${escapeHtml(timeStr)}</span>
+    </div>
+    <div class="message__body">
+      <div class="message__bubble">${escapeHtml(String(text))}</div>
+      ${
+        !isUser
+          ? `<button class="message__copy-btn" type="button" title="Copiar respuesta" aria-label="Copiar respuesta">📋</button>`
+          : ""
+      }
+    </div>
     ${meta ? `<span class="message__meta">${escapeHtml(meta)}</span>` : ""}
   `;
+
+  if (!isUser) {
+    const copyBtn = div.querySelector(".message__copy-btn");
+    if (copyBtn) {
+      copyBtn.addEventListener("click", async () => {
+        try {
+          await navigator.clipboard.writeText(String(text));
+          copyBtn.textContent = "✅";
+          copyBtn.classList.add("copied");
+          setTimeout(() => {
+            copyBtn.textContent = "📋";
+            copyBtn.classList.remove("copied");
+          }, 2000);
+        } catch {
+          console.warn("[Copy] Error al copiar");
+        }
+      });
+    }
+  }
+
   $msgs.appendChild(div);
   scrollToBottom();
 
