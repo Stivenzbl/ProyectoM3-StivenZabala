@@ -5,8 +5,8 @@
  * - Recibir el payload construido por el engine del frontend.
  * - Leer GEMINI_API_KEY desde process.env.
  * - Adaptar el payload interno del chat a Gemini.
- * - Incluir sistema de Fallback Automático entre modelos (gemini-2.0-flash, gemini-2.5-flash, gemini-1.5-flash-latest, etc.)
- * - Devolver un shape compatible con normalizer.js: content[].
+ * - Fallback inteligente solo para errores 404 de modelo no encontrado.
+ * - Retorno inmediato de 429 Rate Limit.
  *
  * La API key nunca se envía al navegador.
  */
@@ -36,15 +36,14 @@ export default async function handler(req, res) {
     const genAI = new GoogleGenerativeAI(apiKey);
     const contents = toGeminiContents(messages);
 
-    // Lista priorizada de modelos candidatos con fallback automático si uno no está disponible en la cuenta/región
+    // Modelos oficiales de Google Generative AI
     const candidateModels = Array.from(
       new Set([
         process.env.GEMINI_MODEL,
         modelName,
         "gemini-2.0-flash",
-        "gemini-2.5-flash",
-        "gemini-1.5-flash-latest",
         "gemini-1.5-flash",
+        "gemini-2.0-flash-lite",
         "gemini-1.5-pro",
       ])
     ).filter(Boolean);
@@ -69,16 +68,22 @@ export default async function handler(req, res) {
 
         text = result.response.text().trim();
         lastError = null;
-        break; // Petición exitosa
+        break; // Éxito
       } catch (err) {
         lastError = err;
+
+        // Si es 429 Rate Limit, no probar otros modelos (el rate limit aplica a la API Key entera)
+        if (isRateLimitError(err)) {
+          break;
+        }
+
         const errText = String(err?.message || "");
-        // Si el modelo retorna 404 Not Found, probamos automáticamente con el siguiente modelo de la lista
+        // Si el modelo específico no existe (404), intentar con el siguiente modelo de la lista
         if (errText.includes("404") || errText.toLowerCase().includes("not found")) {
-          console.warn(`[GEMINI FALLBACK] Modelo '${modelToTry}' no disponible. Probando alternativa...`);
+          console.warn(`[GEMINI FALLBACK] Modelo '${modelToTry}' no disponible (404). Intentando siguiente...`);
           continue;
         }
-        // Para otros errores (rate limits, etc.), salimos del bucle para tratarlos en el catch principal
+
         break;
       }
     }
@@ -93,8 +98,8 @@ export default async function handler(req, res) {
 
     if (isRateLimitError(error)) {
       return res.status(429).json({
-        error: "Rate limit de Gemini. Reintentá en unos segundos.",
-        retryAfterSeconds: 8,
+        error: "Límite de peticiones por minuto alcanzado (Google Gemini Free Tier). Espera 15 segundos.",
+        retryAfterSeconds: 15,
       });
     }
 

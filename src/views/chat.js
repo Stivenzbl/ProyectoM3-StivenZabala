@@ -54,13 +54,13 @@ async function retryWithBackoff(initialErr, payload, maxAttempts = 2) {
   let attempt = 0;
   while (attempt < maxAttempts) {
     attempt++;
-    const waitSecs = initialErr.retryAfterSeconds ? initialErr.retryAfterSeconds + attempt * 3 : 10;
+    const waitSecs = initialErr.retryAfterSeconds ? initialErr.retryAfterSeconds : 15;
     for (let i = waitSecs; i > 0; i -= 1) {
-      showStatus("retrying", `⏳ Límite de cuota Gemini (15 req/min). Reintentando (${attempt}/${maxAttempts}) en ${i}s...`);
+      showStatus("retrying", `⏳ Cuota gratuita Gemini (15 req/min). Reintentando (${attempt}/${maxAttempts}) en ${i}s...`);
       await wait(1000);
     }
     showTyping();
-    showStatus("loading", `Reintentando (${attempt}/${maxAttempts})...`);
+    showStatus("loading", `Reintentando conexión...`);
     try {
       const raw = await callAI(payload);
       hideTyping();
